@@ -127,5 +127,23 @@
     * ATM is the singleton facade that orchestrates the entire system.
 
 ### 3.2 Key Design Patterns
+The core challenges are managing state transitions (what operations are valid when?) and dispensing cash across multiple denominations (how to try each denomination in order?). These map naturally to the State and Chain of Responsibility patterns.
 
+1. State Pattern
+The Problem: The ATM behaves completely differently depending on whether a card is inserted and whether the user has authenticated. Without a clean abstraction, every public method on ATM would start with:
+```
+if state is IDLE then reject
+else if state is CARD_INSERTED then maybe allow
+else if state is AUTHENTICATED then allow
+```
+With six methods and three states, that's 18 conditional branches scattered across the ATM class. Adding a new state (like OUT_OF_SERVICE) means editing every method.
+
+The Solution: The State pattern encapsulates each state's behavior in a dedicated class. The ATM delegates to its current state handler, which knows what's valid and what isn't.
+
+The State pattern isolates each state's rules into a single class. Adding OUT_OF_SERVICE means adding one class, not editing six methods. In interviews, this is one of the clearest demonstrations of the Open/Closed Principle.
+
+2. Chain of Responsibility Pattern
+The Problem: Dispensing $170 requires trying $100 bills first (dispense one, $70 remaining), then $50 bills (dispense one, $20 remaining), then $20 bills (dispense one, done). Each denomination needs to process what it can and hand off the remainder.
+
+The Solution: The Chain of Responsibility pattern links denomination handlers in order from largest to smallest. Each handler in the chain processes what it can and passes the remainder to the next handler.
 
